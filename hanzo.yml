@@ -1,0 +1,15 @@
+# Canonical CI/CD config for hanzoai/quickjs-emscripten — read by hanzoai/ci
+# (via .hanzo/workflows/cicd.yml) and by platform.hanzo.ai.
+#
+# Library monorepo (pnpm). The gate is the repo's own build-then-typecheck
+# chain: generate the variant packages, build every package with tsup, then run
+# tsc --noEmit in each. The variants are generated code, so building before
+# typechecking is the order that can actually fail for the right reason.
+#
+# --ignore-scripts is load-bearing: the root `prepare` script runs the FULL
+# `pnpm check` (build, format, types, tests, lint) on install, and the wasm
+# halves of that need an emscripten toolchain the runner does not have. Skipping
+# it lets this gate run the parts that can run, in a defined order.
+test:
+  - name: build-and-typecheck
+    run: pnpm install --frozen-lockfile --ignore-scripts && pnpm run build:codegen && pnpm run build:packages && pnpm run check:types
